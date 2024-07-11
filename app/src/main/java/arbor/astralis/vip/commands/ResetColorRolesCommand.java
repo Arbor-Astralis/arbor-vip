@@ -6,10 +6,12 @@ import arbor.astralis.vip.Settings;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ApplicationCommandInteractionEvent;
 import discord4j.core.object.command.Interaction;
+import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.Role;
 import discord4j.discordjson.json.ImmutableApplicationCommandRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.*;
@@ -54,30 +56,32 @@ public final class ResetColorRolesCommand implements ApplicationCommand {
         List<Long> vipColorRoles = guildSettings.getVipColorRoleIds();
         List<Long> rolesToRemove = new ArrayList<>();
 
-        interaction.getUser().asMember(interaction.getGuildId().get())
-            .subscribe(member -> {
-                member.getRoles().doOnEach(roleSignal -> {
-                    Role role = roleSignal.get();
+        Member member = interaction.getUser().asMember(interaction.getGuildId().get()).block();
+        
+        if (member != null) {
+            Flux<Role> rolesFlux = member.getRoles();
 
-                    if (role == null) {
-                        return;
+            rolesFlux.doOnEach(roleSignal -> {
+                Role role = roleSignal.get();
+
+                if (role == null) {
+                    return;
+                }
+
+                long roleId = role.getId().asLong();
+
+                if (vipColorRoles.contains(roleId)) {
+                    rolesToRemove.add(roleId);
+                }
+
+                if (!rolesToRemove.isEmpty()) {
+                    for (Long roleToRemove : rolesToRemove) {
+                        member.removeRole(Snowflake.of(roleToRemove), "Member requested removal (by " + Branding.BOT_NAME + ")").block();
                     }
-
-                    long roleId = role.getId().asLong();
-
-                    if (vipColorRoles.contains(roleId)) {
-                        rolesToRemove.add(roleId);
-                    }
-
-                    if (!rolesToRemove.isEmpty()) {
-                        for (Long roleToRemove : rolesToRemove) {
-                            member.removeRole(Snowflake.of(roleToRemove), "Member requested removal (by " + Branding.BOT_NAME + ")")
-                                .subscribe();
-                        }
-                    }
-                });
-            });
-
+                }
+            }).blockLast();
+        }
+        
         return event.reply()
             .withContent(Branding.getResetColorRolesSuccessMessage(rolesToRemove));
     }

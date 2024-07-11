@@ -13,7 +13,7 @@ public final class Branding {
         if (roleIdsRemoved == null || roleIdsRemoved.isEmpty()) {
             return "Howdy partner! As you do not currently have a VIP color role, no roles were removed. :rose:";
         } else {
-            return "Done deal partner! The following roles have been removed: " +
+            return "Done deal partner! I've removed the following role(s) from you: " +
                 roleIdsRemoved.stream()
                     .map(id -> "<@&" + id + ">")
                     .collect(Collectors.joining(", "));

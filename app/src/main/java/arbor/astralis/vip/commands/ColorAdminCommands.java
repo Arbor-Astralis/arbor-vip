@@ -18,10 +18,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static arbor.astralis.vip.commands.CommandHelper.formatChannelReference;
 import static arbor.astralis.vip.commands.CommandHelper.formatRoleReference;
 
-public final class VipColorAdminCommands implements ApplicationCommand {
+public final class ColorAdminCommands implements ApplicationCommand {
     
     private static final Logger LOGGER = LogManager.getLogger();
     

@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 import static arbor.astralis.vip.commands.CommandHelper.formatChannelReference;
 import static arbor.astralis.vip.commands.CommandHelper.formatRoleReference;
 
-public final class VipSystemAdminCommands implements ApplicationCommand {
+public final class SystemAdminCommands implements ApplicationCommand {
     
     private static final Logger LOGGER = LogManager.getLogger();
     

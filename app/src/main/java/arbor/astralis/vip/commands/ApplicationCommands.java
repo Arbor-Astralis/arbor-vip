@@ -11,8 +11,9 @@ public final class ApplicationCommands {
     
     static {
         registerCommand(new HelpCommand());
-        registerCommand(new VipSystemAdminCommands());
-        registerCommand(new VipColorAdminCommands());
+        registerCommand(new ResetColorRolesCommand());
+        registerCommand(new SystemAdminCommands());
+        registerCommand(new ColorAdminCommands());
     }
     
     private ApplicationCommands() {
