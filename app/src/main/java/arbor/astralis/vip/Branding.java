@@ -1,5 +1,6 @@
 package arbor.astralis.vip;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -8,7 +9,7 @@ public final class Branding {
     public static final String BOT_NAME = "Jean-Pierre";
     public static final String MAINTAINER_NAME = "Haru";
 
-    public static String getResetColorRolesSuccessMessage(Set<Long> roleIdsRemoved) {
+    public static String getResetColorRolesSuccessMessage(List<Long> roleIdsRemoved) {
         if (roleIdsRemoved == null || roleIdsRemoved.isEmpty()) {
             return "Howdy partner! As you do not currently have a VIP color role, no roles were removed. :rose:";
         } else {

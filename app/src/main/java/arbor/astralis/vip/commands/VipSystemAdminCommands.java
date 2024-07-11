@@ -53,7 +53,7 @@ public final class VipSystemAdminCommands implements ApplicationCommand {
 
     @Override
     public Optional<String> getParametersHelpText() {
-        return Optional.of("[tier1 | tier2 | tier3 | honor] <@&roleId>");
+        return Optional.empty();
     }
 
     @Override
@@ -171,7 +171,7 @@ public final class VipSystemAdminCommands implements ApplicationCommand {
         var guildId = event.getInteraction().getGuildId();
 
         if (guildId.isEmpty()) {
-            LOGGER.warn("Missing guildId for info sub-command");
+            LOGGER.warn("Missing guildId for sub-command");
             return event.reply().withContent(Branding.getUnexpectedErrorMessage());
         }
 

@@ -1,7 +1,9 @@
 package arbor.astralis.vip;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public final class GuildSettings {
@@ -10,7 +12,7 @@ public final class GuildSettings {
     
     private final long guildId;
     
-    private Set<Long> vipColorRoleIds = new HashSet<>();
+    private List<Long> vipColorRoleIds = new ArrayList<>();
     
     private @Nullable Long vipTier1RoleId = null;
     private @Nullable Long vipTier2RoleId = null;
@@ -28,11 +30,11 @@ public final class GuildSettings {
         return guildId;
     }
 
-    public Set<Long> getVipColorRoleIds() {
+    public List<Long> getVipColorRoleIds() {
         return vipColorRoleIds;
     }
 
-    public void setVipColorRoleIds(Set<Long> vipColorRoleIds) {
+    public void setVipColorRoleIds(List<Long> vipColorRoleIds) {
         this.vipColorRoleIds = vipColorRoleIds;
     }
 

@@ -12,9 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import reactor.core.publisher.Mono;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public final class ResetColorRolesCommand implements ApplicationCommand {
 
@@ -53,8 +51,8 @@ public final class ResetColorRolesCommand implements ApplicationCommand {
         long guildId = guildIdValue.get().asLong();
         GuildSettings guildSettings = Settings.forGuild(guildId);
 
-        Set<Long> vipColorRoles = guildSettings.getVipColorRoleIds();
-        Set<Long> rolesToRemove = new HashSet<>();
+        List<Long> vipColorRoles = guildSettings.getVipColorRoleIds();
+        List<Long> rolesToRemove = new ArrayList<>();
 
         interaction.getUser().asMember(interaction.getGuildId().get())
             .subscribe(member -> {
