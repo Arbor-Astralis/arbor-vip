@@ -54,12 +54,12 @@ public final class Branding {
             } else if (tierDeserved == PremiumTier.TIER_2) {
                 message = takeRandom(
                     "Moving on up, <@" + userId + ">! Thank you for your continued support of this community.\n" +
-                        "As a second-month booster, you have earned the VIP Platinum pass. Check out the VIP specials channel for your rewards!" 
+                        "As a second-month booster, you have earned the VIP Platinum pass.\n\nCheck out the VIP specials channel for your rewards!" 
                 );
             } else if (tierDeserved == PremiumTier.TIER_3) {
                 message = takeRandom(
                     "Salutations, <@" + userId + ">! Thank you for another month of steadfast support for this community :champagne_glass:\n" +
-                        "You have earned the VIP Deluxe pass. Check out the VIP specials channel for your new rewards!"
+                        "You have earned the VIP Deluxe pass.\n\nCheck out the VIP specials channel for your new rewards!"
                 );
             }
         } else {

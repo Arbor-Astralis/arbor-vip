@@ -46,8 +46,8 @@ public final class PerkManager {
     private static void refreshPerksForGuild(Guild guild, GatewayDiscordClient client, GuildSettings settings) {
         List<Member> members = guild.getMembers().collectList().block();
         
-        List<Long> vipObserved = new ArrayList<>();
-        List<Long> vipUpdated = new ArrayList<>();
+        List<Member> vipObserved = new ArrayList<>();
+        List<Member> vipUpdated = new ArrayList<>();
         
         for (Member member : members) {
             if (member == null) {
@@ -56,10 +56,10 @@ public final class PerkManager {
 
             Optional<Instant> premiumTime = member.getPremiumTime();
             if (premiumTime.isPresent()) {
-                vipObserved.add(member.getId().asLong());
+                vipObserved.add(member);
                 
                 if (refreshPerksForMember(member, premiumTime.get(), guild, client, settings)) {
-                    vipUpdated.add(member.getId().asLong());
+                    vipUpdated.add(member);
                 }
             }
         }
@@ -70,21 +70,34 @@ public final class PerkManager {
         
         if (modChannel instanceof GuildMessageChannel messageChannel) {
             var vipObservedNames = new StringBuilder();
-            for (Long userId : vipObserved) {
-                vipObservedNames.append("<@").append(userId).append(">").append("\n");
+            for (Member member : vipObserved) {
+                String vipDays = "n/a";
+
+                Optional<Instant> premiumTime = member.getPremiumTime();
+                if (premiumTime.isPresent()) {
+                    long premiumStart = premiumTime.get().toEpochMilli();
+                    long now = Instant.now().toEpochMilli();
+                    long durationMs = now - premiumStart;
+                    long durationDays = TimeUnit.MILLISECONDS.toDays(durationMs);
+                    
+                    vipDays = durationDays + " day(s)";
+                }
+                
+                vipObservedNames.append("<@").append(member.getId().asLong()).append(">")
+                    .append(" - vip time: ").append(vipDays).append("\n");
             }
 
             var vipUpdatedNames = new StringBuilder();
-            for (Long userId : vipUpdated) {
-                vipUpdatedNames.append("<@").append(userId).append(">").append("\n");
+            for (Member member : vipUpdated) {
+                vipUpdatedNames.append("<@").append(member).append(">").append("\n");
             }
             
             EmbedCreateSpec embed = EmbedCreateSpec.builder()
                 .description(
-                    "**Completed periodic perk refresh**\n" +
+                    "**Completed VIP Perk Refresh**\n" +
                         "\n" +
-                        "VIPs observed: " + vipUpdated.size() + "\n" + vipObservedNames + "\n\n" +
-                        "VIPs updated: " + vipUpdated + "\n" + vipUpdatedNames
+                        "VIPs observed: " + vipObserved.size() + "\n" + vipObservedNames + "\n\n" +
+                        "VIPs updated: " + vipUpdated.size() + "\n" + vipUpdatedNames
                 )
                 .color(Color.BISMARK)
                 .build();
@@ -93,7 +106,7 @@ public final class PerkManager {
         }
     }
 
-    private static boolean refreshPerksForMember(
+    public static boolean refreshPerksForMember(
         Member member,
         Instant premiumTime,
         Guild guild,
@@ -135,16 +148,17 @@ public final class PerkManager {
             deserveVeteranHonor = true;
         }
         
-        return setPerkForMember(member, guild, tierDeserved, deserveVeteranHonor, client, guildSettings, false);
+        return setPerkForMember(member, guild, tierDeserved, deserveVeteranHonor, client, guildSettings, null, false);
     }
 
-    private static boolean setPerkForMember(
+    public static boolean setPerkForMember(
         Member member, 
         Guild guild,
         PremiumTier tierDeserved, 
         boolean deserveVeteranHonor, 
         GatewayDiscordClient client, 
         @Nullable GuildSettings guildSettings,
+        @Nullable Long triggerUserId,
         boolean forceSet
     ) {
         assert member != null;
@@ -217,8 +231,8 @@ public final class PerkManager {
         }
 
         if (updatedTier || awardedHonor) {
-            postModUpdate(updatedTier, awardedHonor, tierCurrent, tierDeserved, member, guild, guildSettings, null);
-            postMemberUpdate(updatedTier, awardedHonor, tierCurrent, tierDeserved, member, guild, guildSettings, null);
+            postModUpdate(updatedTier, awardedHonor, tierCurrent, tierDeserved, member, guild, guildSettings, triggerUserId);
+            postMemberUpdate(updatedTier, awardedHonor, tierCurrent, tierDeserved, member, guild, guildSettings, triggerUserId);
             
             return true;
         }
@@ -243,11 +257,11 @@ public final class PerkManager {
         if (modChannel instanceof GuildMessageChannel messageChannel) {
             EmbedCreateSpec embed = EmbedCreateSpec.builder()
                 .description(
-                    "**VIP Member Perk Update**" +
-                        "Member: <@" + member.getId().asLong() + ">\n" +
-                        "Tier Now: " + tierDeserved + " (was " + tierCurrent + ")\n" +
-                        "Awarded veteran honor: " + awardedHonor +
-                        ((triggerUserId != null) ? "\nTriggered by: <@" + triggerUserId + ">" : "")
+                    "**VIP Member Perk Update**\n\n" +
+                        "**Member:** <@" + member.getId().asLong() + ">\n" +
+                        "**Tier Now:** " + tierDeserved + " (was " + tierCurrent + ")\n" +
+                        "**Awarded Honor:** " + awardedHonor +
+                        ((triggerUserId != null) ? "\n**Triggered by:** <@" + triggerUserId + ">" : "")
                 )
                 .color(Color.BISMARK)
                 .build();

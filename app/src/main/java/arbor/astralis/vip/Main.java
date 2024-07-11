@@ -5,8 +5,11 @@ import arbor.astralis.vip.commands.ApplicationCommands;
 import arbor.astralis.vip.commands.CommandHelper;
 import discord4j.core.DiscordClient;
 import discord4j.core.GatewayDiscordClient;
+import discord4j.core.event.domain.guild.MemberUpdateEvent;
 import discord4j.core.event.domain.interaction.ApplicationCommandInteractionEvent;
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent;
+import discord4j.core.object.entity.Guild;
+import discord4j.core.object.entity.Member;
 import discord4j.discordjson.Id;
 import discord4j.discordjson.json.ApplicationCommandRequest;
 import discord4j.gateway.intent.Intent;
@@ -17,6 +20,7 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Optional;
 
 public final class Main {
@@ -48,18 +52,10 @@ public final class Main {
 
         createApplicationCommands(client, applicationId);
 
-        GatewayDiscordClient gatewayClient = client.gateway()
+        client.gateway()
             .setEnabledIntents(IntentSet.of(Intent.GUILD_MEMBERS))
-            .login()
-            .flatMap(Main::initializeGateway)
+            .withGateway(Main::initializeGateway)
             .block();
-        
-        // To whom reading this...
-        // I wish I could have more time to make EVERYTHING cleaner :(
-        
-        while (true) {
-            Thread.sleep(1000);
-        }
     }
 
     private static void createApplicationCommands(DiscordClient client, long applicationId) {
@@ -137,6 +133,19 @@ public final class Main {
             LOGGER.warn("Unrecognized button payload: " + event.getCustomId());
             return Mono.empty();
         }).subscribe();
+        
+        client.on(MemberUpdateEvent.class, event -> {
+            Optional<Instant> premiumSince = event.getCurrentPremiumSince();
+            
+            if (premiumSince.isPresent()) {
+                Member member = event.getMember().block();
+                Guild guild = event.getGuild().block();
+                
+                PerkManager.refreshPerksForMember(member, premiumSince.get(),guild,client, null);
+            }
+            
+            return Mono.empty();
+        });
         
         PerkManager.refreshPerksForAllGuilds(client);
 

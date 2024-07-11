@@ -12,6 +12,7 @@ public final class ApplicationCommands {
     static {
         registerCommand(new HelpCommand());
         registerCommand(new ResetColorRolesCommand());
+        registerCommand(new SetTierCommand());
         registerCommand(new SystemAdminCommands());
         registerCommand(new ColorAdminCommands());
     }
