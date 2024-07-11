@@ -9,6 +9,8 @@ import discord4j.core.event.domain.interaction.ApplicationCommandInteractionEven
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent;
 import discord4j.discordjson.Id;
 import discord4j.discordjson.json.ApplicationCommandRequest;
+import discord4j.gateway.intent.Intent;
+import discord4j.gateway.intent.IntentSet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.reactivestreams.Publisher;
@@ -21,7 +23,7 @@ public final class Main {
     
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         Optional<String> botToken = Optional.empty();
 
         try {
@@ -46,9 +48,19 @@ public final class Main {
 
         createApplicationCommands(client, applicationId);
 
-        client.withGateway(Main::initializeGateway).block();
+        GatewayDiscordClient gatewayClient = client.gateway()
+            .setEnabledIntents(IntentSet.of(Intent.GUILD_MEMBERS))
+            .login()
+            .flatMap(Main::initializeGateway)
+            .block();
+        
+        // To whom reading this...
+        // I wish I could have more time to make EVERYTHING cleaner :(
+        
+        while (true) {
+            Thread.sleep(1000);
+        }
     }
-
 
     private static void createApplicationCommands(DiscordClient client, long applicationId) {
         int totalCreated = 0;
@@ -93,7 +105,7 @@ public final class Main {
             }).subscribe();
     }
 
-    private static Publisher<?> initializeGateway(GatewayDiscordClient client) {
+    private static Mono<GatewayDiscordClient> initializeGateway(GatewayDiscordClient client) {
         client.on(ApplicationCommandInteractionEvent.class, event -> {
             String name = event.getCommandName();
             Optional<ApplicationCommand> command = ApplicationCommands.forName(name);
@@ -125,8 +137,10 @@ public final class Main {
             LOGGER.warn("Unrecognized button payload: " + event.getCustomId());
             return Mono.empty();
         }).subscribe();
+        
+        PerkManager.refreshPerksForAllGuilds(client);
 
-        return Mono.empty();
+        return Mono.just(client);
     }
 
 }
