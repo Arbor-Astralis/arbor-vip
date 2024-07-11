@@ -133,22 +133,56 @@ public final class PerkManager {
         long premiumSince = premiumTime.toEpochMilli();
         long premiumDurationMillis = now - premiumSince;
         long premiumDays = TimeUnit.MILLISECONDS.toDays(premiumDurationMillis);
-        
+
+        PremiumTier tierCurrent = null;
         PremiumTier tierDeserved;
-        boolean deserveVeteranHonor; 
+        boolean deserveVeteranHonor;
+        
+        Set<Long> memberRoleIds = member.getRoles().collectList().block()
+            .stream()
+            .map(role -> role.getId().asLong())
+            .collect(Collectors.toSet());
+
+        if (memberRoleIds.contains(guildSettings.getVipTier1RoleId())) {
+            tierCurrent = PremiumTier.TIER_1;
+        }
+        if (memberRoleIds.contains(guildSettings.getVipTier2RoleId())) {
+            tierCurrent = PremiumTier.TIER_2;
+        }
+        if (memberRoleIds.contains(guildSettings.getVipTier3RoleId())) {
+            tierCurrent = PremiumTier.TIER_3;
+        }
         
         if (premiumDays <= 30) {
-            tierDeserved = PremiumTier.TIER_1;
+            tierDeserved = getThisOrNextTier(PremiumTier.TIER_1, tierCurrent);
             deserveVeteranHonor = false;
         } else if (premiumDays <= 60) {
-            tierDeserved = PremiumTier.TIER_2;
+            tierDeserved = getThisOrNextTier(PremiumTier.TIER_2, tierCurrent);
             deserveVeteranHonor = true;
         } else {
-            tierDeserved = PremiumTier.TIER_3;
+            tierDeserved = getThisOrNextTier(PremiumTier.TIER_3, tierCurrent);
             deserveVeteranHonor = true;
         }
         
         return setPerkForMember(member, guild, tierDeserved, deserveVeteranHonor, client, guildSettings, null, false);
+    }
+
+    private static PremiumTier getThisOrNextTier(PremiumTier defaultNextTier, PremiumTier currentTier) {
+        if (currentTier == null) {
+            return defaultNextTier;
+        }
+        
+        if (defaultNextTier == PremiumTier.TIER_3) {
+            return defaultNextTier;
+        }
+        
+        if (defaultNextTier.getOrdinal() <= currentTier.getOrdinal()) {
+            int nextOrdinal = Math.min(PremiumTier.TIER_3.getOrdinal(), currentTier.getOrdinal() + 1);
+            Optional<PremiumTier> premiumTier = PremiumTier.fromOrdinal(nextOrdinal);
+            return premiumTier.orElse(defaultNextTier);
+        }
+        
+        return defaultNextTier;
     }
 
     public static boolean setPerkForMember(
