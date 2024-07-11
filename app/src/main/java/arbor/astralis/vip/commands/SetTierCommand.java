@@ -27,9 +27,9 @@ public final class SetTierCommand implements ApplicationCommand {
     private static final String PARAMETER_USER = "vip_member";
     private static final String PARAMETER_TIER = "tier";
     
-    private static final int TIER_1 = 1;
-    private static final int TIER_2 = 2;
-    private static final int TIER_3 = 3;
+    private static final int TIER_1 = PremiumTier.TIER_1.getOrdinal();
+    private static final int TIER_2 = PremiumTier.TIER_2.getOrdinal();
+    private static final int TIER_3 = PremiumTier.TIER_3.getOrdinal();
     
     
     @Override
@@ -123,6 +123,10 @@ public final class SetTierCommand implements ApplicationCommand {
         Member member = guild.getMemberById(Snowflake.of(userId)).block();
         if (member == null) {
             return event.reply().withContent(Branding.getUnexpectedErrorMessage());
+        }
+        if (member.getPremiumTime().isEmpty()) {
+            LOGGER.warn("No premium tier for value: " + tierValues.getValue());
+            return event.reply().withContent("Hold it partner, that member is not a server booster!");
         }
         
         long triggerUserId = event.getInteraction().getUser().getId().asLong();

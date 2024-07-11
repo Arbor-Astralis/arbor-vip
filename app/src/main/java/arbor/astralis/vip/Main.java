@@ -8,6 +8,7 @@ import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.guild.MemberUpdateEvent;
 import discord4j.core.event.domain.interaction.ApplicationCommandInteractionEvent;
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent;
+import discord4j.core.event.domain.lifecycle.ReadyEvent;
 import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Member;
 import discord4j.discordjson.Id;
@@ -16,7 +17,6 @@ import discord4j.gateway.intent.Intent;
 import discord4j.gateway.intent.IntentSet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
@@ -53,7 +53,7 @@ public final class Main {
         createApplicationCommands(client, applicationId);
 
         client.gateway()
-            .setEnabledIntents(IntentSet.of(Intent.GUILD_MEMBERS))
+            .setEnabledIntents(IntentSet.nonPrivileged().or(IntentSet.of(Intent.GUILD_MEMBERS)))
             .withGateway(Main::initializeGateway)
             .block();
     }
@@ -101,7 +101,11 @@ public final class Main {
             }).subscribe();
     }
 
-    private static Mono<GatewayDiscordClient> initializeGateway(GatewayDiscordClient client) {
+    private static Mono<?> initializeGateway(GatewayDiscordClient client) {
+        
+        PerkRefresher.initialize(client);
+        PerkManager.refreshPerksForAllGuilds(client);
+        
         client.on(ApplicationCommandInteractionEvent.class, event -> {
             String name = event.getCommandName();
             Optional<ApplicationCommand> command = ApplicationCommands.forName(name);
@@ -133,23 +137,21 @@ public final class Main {
             LOGGER.warn("Unrecognized button payload: " + event.getCustomId());
             return Mono.empty();
         }).subscribe();
-        
+
         client.on(MemberUpdateEvent.class, event -> {
             Optional<Instant> premiumSince = event.getCurrentPremiumSince();
-            
+
             if (premiumSince.isPresent()) {
                 Member member = event.getMember().block();
                 Guild guild = event.getGuild().block();
-                
-                PerkManager.refreshPerksForMember(member, premiumSince.get(),guild,client, null);
-            }
-            
-            return Mono.empty();
-        });
-        
-        PerkManager.refreshPerksForAllGuilds(client);
 
-        return Mono.just(client);
+                PerkManager.refreshPerksForMember(member, premiumSince.get(), guild, client, null);
+            }
+
+            return Mono.empty();
+        }).subscribe();
+
+        return Mono.empty();
     }
 
 }
