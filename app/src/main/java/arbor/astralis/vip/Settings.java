@@ -76,15 +76,16 @@ public final class Settings {
         return getGuildSettings(guildId, persistedSettings);
     }
 
-    private static GuildSettings getGuildSettings(long guildId, GuildSettingsDocument persistedSettings) {
+    private static GuildSettings getGuildSettings(long guildId, GuildSettingsDocument document) {
         var settings = new GuildSettings(guildId);
         
-        settings.setVipColorRoleIds(persistedSettings.getVipColorRoleIds());
-        settings.setVipTier1RoleId(persistedSettings.getVipTier1RoleId());
-        settings.setVipTier2RoleId(persistedSettings.getVipTier2RoleId());
-        settings.setVipTier3RoleId(persistedSettings.getVipTier3RoleId());
-        settings.setVipHonorRoleId(persistedSettings.getVipHonorRoleId());
-        settings.setBroadcastChannelId(persistedSettings.getBroadcastChannelId());
+        settings.setVipColorRoleIds(document.getVipColorRoleIds());
+        settings.setVipTier1RoleId(document.getVipTier1RoleId());
+        settings.setVipTier2RoleId(document.getVipTier2RoleId());
+        settings.setVipTier3RoleId(document.getVipTier3RoleId());
+        settings.setVipHonorRoleId(document.getVipHonorRoleId());
+        settings.setBroadcastChannelId(document.getBroadcastChannelId());
+        settings.setModChannelId(document.getModChannelId());
         
         return settings;
     }
@@ -106,14 +107,8 @@ public final class Settings {
     public static void persistForGuild(GuildSettings guildSettings) {
         Path settingsFile = getGuildSettingsFile(guildSettings.getGuildId());
 
-        var document = new GuildSettingsDocument();
-        document.setVipColorRoleIds(guildSettings.getVipColorRoleIds());
-        document.setVipTier1RoleId(guildSettings.getVipTier1RoleId());
-        document.setVipTier2RoleId(guildSettings.getVipTier2RoleId());
-        document.setVipTier3RoleId(guildSettings.getVipTier3RoleId());
-        document.setVipHonorRoleId(guildSettings.getVipHonorRoleId());
-        document.setBroadcastChannelId(guildSettings.getBroadcastChannelId());
-        
+        var document = createGuildSettingsDocument(guildSettings);
+
         var mapper = new ObjectMapper();
         try {
             String serializedData = mapper.writeValueAsString(document);
@@ -126,6 +121,20 @@ public final class Settings {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static GuildSettingsDocument createGuildSettingsDocument(GuildSettings guildSettings) {
+        var document = new GuildSettingsDocument();
+        
+        document.setVipColorRoleIds(guildSettings.getVipColorRoleIds());
+        document.setVipTier1RoleId(guildSettings.getVipTier1RoleId());
+        document.setVipTier2RoleId(guildSettings.getVipTier2RoleId());
+        document.setVipTier3RoleId(guildSettings.getVipTier3RoleId());
+        document.setVipHonorRoleId(guildSettings.getVipHonorRoleId());
+        document.setBroadcastChannelId(guildSettings.getBroadcastChannelId());
+        document.setModChannelId(guildSettings.getModChannelId());
+        
+        return document;
     }
 
     private static Path getGuildSettingsFile(long guildId) {

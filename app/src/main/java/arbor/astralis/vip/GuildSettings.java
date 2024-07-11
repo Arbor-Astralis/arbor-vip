@@ -18,6 +18,7 @@ public final class GuildSettings {
     private @Nullable Long vipHonorRoleId = null;
 
     private @Nullable Long broadcastChannelId = null;
+    private @Nullable Long modChannelId = null;
     
     public GuildSettings(long guildId) {
         this.guildId = guildId;
@@ -78,5 +79,14 @@ public final class GuildSettings {
 
     public void setBroadcastChannelId(@Nullable Long broadcastChannelId) {
         this.broadcastChannelId = broadcastChannelId;
+    }
+
+    @Nullable
+    public Long getModChannelId() {
+        return modChannelId;
+    }
+
+    public void setModChannelId(@Nullable Long modChannelId) {
+        this.modChannelId = modChannelId;
     }
 }

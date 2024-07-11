@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface ApplicationCommand {
     
-    String NAME_PREFIX = "qotd-";
+    String NAME_PREFIX = "vip-";
 
     
     String getName();

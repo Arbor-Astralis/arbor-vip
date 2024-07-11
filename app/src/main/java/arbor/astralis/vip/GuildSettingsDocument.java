@@ -14,6 +14,7 @@ public final class GuildSettingsDocument {
     private @Nullable Long vipHonorRoleId = null;
     
     private @Nullable Long broadcastChannelId = null;
+    private @Nullable Long modChannelId = null;
     
     public Set<Long> getVipColorRoleIds() {
         return vipColorRoleIds;
@@ -66,5 +67,14 @@ public final class GuildSettingsDocument {
 
     public void setBroadcastChannelId(@Nullable Long broadcastChannelId) {
         this.broadcastChannelId = broadcastChannelId;
+    }
+
+    @Nullable
+    public Long getModChannelId() {
+        return modChannelId;
+    }
+
+    public void setModChannelId(@Nullable Long modChannelId) {
+        this.modChannelId = modChannelId;
     }
 }

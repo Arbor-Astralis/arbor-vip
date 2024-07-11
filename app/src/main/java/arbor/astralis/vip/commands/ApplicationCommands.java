@@ -11,6 +11,7 @@ public final class ApplicationCommands {
     
     static {
         registerCommand(new HelpCommand());
+        registerCommand(new VipSystemAdminCommands());
     }
     
     private ApplicationCommands() {

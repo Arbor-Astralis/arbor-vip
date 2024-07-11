@@ -76,6 +76,8 @@ public final class Main {
     private static void resetAllCommands(DiscordClient client, long applicationId) {
         client.getApplicationService().getGlobalApplicationCommands(applicationId)
             .doOnEach(command -> {
+                if (command.get() == null) return;
+                
                 Id commandId = command.get().id();
                 client.getApplicationService().deleteGlobalApplicationCommand(applicationId, commandId.asLong());
                 LOGGER.info("Deleted global command: " + command.get().name() + " (id: " + commandId + ")");
@@ -83,6 +85,8 @@ public final class Main {
 
         client.getApplicationService().getGuildApplicationCommands(applicationId, 1210865909321957376L)
             .doOnEach(command -> {
+                if (command.get() == null) return;
+                
                 Id commandId = command.get().id();
                 client.getApplicationService().deleteGuildApplicationCommand(applicationId, 1210865909321957376L, commandId.asLong());
                 LOGGER.info("Deleted guild command: " + command.get().name() + " (id: " + commandId + ")");

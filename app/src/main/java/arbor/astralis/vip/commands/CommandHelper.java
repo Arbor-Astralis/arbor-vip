@@ -6,34 +6,61 @@ import discord4j.core.object.entity.Member;
 import discord4j.discordjson.json.ApplicationCommandInteractionOptionData;
 import discord4j.rest.util.Permission;
 import discord4j.rest.util.PermissionSet;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.util.HashMap;
-import java.util.Map;
+import javax.annotation.Nullable;
+import java.util.*;
 
 public final class CommandHelper {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final String PAYLOAD_SEPARATOR = ";";
 
     private CommandHelper() {
         
     }
     
-    public static Map<String, String> marshalOptionValues(ApplicationCommandInteractionEvent event) {
-        Map<String, String> optionValues = new HashMap<>(2);
+    public static Map<String, OptionsAndValues> marshalOptionValues(ApplicationCommandInteractionEvent event) {
+        Map<String, OptionsAndValues> optionValues = new HashMap<>(2);
 
         event.getInteraction().getData().data().toOptional().flatMap(commandData ->
             commandData.options().toOptional()).ifPresent(options -> {
                 for (ApplicationCommandInteractionOptionData option : options) {
-                    if (option.value().isAbsent()) {
-                        continue;
-                    }
-
-                    optionValues.put(option.name(), option.value().get());
+                    var entry = new OptionsAndValues(
+                        option.options().toOptional().orElse(new ArrayList<>(2)), 
+                        option.value().toOptional().orElse(null)
+                    );
+                    
+                    optionValues.put(option.name(), entry);
                 }
             }
         );
 
         return optionValues;
+    }
+    
+    public static final class OptionsAndValues {
+        
+        private final List<ApplicationCommandInteractionOptionData> options;
+        private final @Nullable String value;
+        
+        public OptionsAndValues(
+            List<ApplicationCommandInteractionOptionData> options, 
+            @Nullable String value
+        ) {
+            this.options = options;
+            this.value = value;
+        }
+
+        public List<ApplicationCommandInteractionOptionData> getOptions() {
+            return options;
+        }
+
+        @Nullable
+        public String getValue() {
+            return value;
+        }
     }
 
     public static boolean isTriggerUserAdmin(ApplicationCommandInteractionEvent event) {
@@ -92,5 +119,25 @@ public final class CommandHelper {
 
     private static String escapePayloadValue(String entry) {
         return entry.replaceAll(PAYLOAD_SEPARATOR, "\\\\" + PAYLOAD_SEPARATOR);
+    }
+
+    public static Long extractLongValue(ApplicationCommandInteractionOptionData data) {
+        return data.value().toOptional().flatMap(stringValue -> {
+            try {
+                long parsedLong = Long.parseLong(stringValue);
+                return Optional.of(parsedLong);
+            } catch (NumberFormatException e) {
+                LOGGER.warn("Unable to parse String value to long: " + stringValue);
+                return Optional.empty();
+            }
+        }).orElse(null);
+    }
+
+    public static String formatRoleReference(@Nullable Long roleId) {
+        return roleId == null ? "_(unset)_" : "<@&" + roleId + ">";
+    }
+
+    public static String formatChannelReference(@Nullable Long channelId) {
+        return channelId == null ? "_(unset)_" : "<#" + channelId + ">";
     }
 }
